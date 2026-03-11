@@ -54,8 +54,11 @@
               <!-- Logo group: icon + text -->
 
               <div
-                class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-sunny flex items-center justify-center pulse-glow"
+                onclick="toggleAdminMode()"
+                class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-sunny flex items-center justify-center pulse-glow cursor-pointer"
               >
+                <!-- Printer icon SVG here -->
+
                 <!-- Logo background circle with pulsing glow effect -->
                 <svg
                   class="w-6 h-6 md:w-7 md:h-7 text-forest"
@@ -1304,58 +1307,70 @@
             <p class="text-forest/70">See what our customers are saying</p>
           </div>
 
-          <!-- Reviews Carousel -->
           <div
             id="reviews-container"
-            class="bg-white rounded-3xl shadow-xl p-8 md:p-12 min-h-[280px] relative"
+            class="bg-white rounded-3xl shadow-2xl p-10 md:p-14 min-h-[360px] relative"
           >
-            <div id="review-content" class="text-center">
-              <!-- Dynamically filled by JS -->
+            <div
+              id="review-content"
+              class="min-h-[220px] flex items-center justify-center text-center transition-all duration-500"
+            >
+              <!-- JS fills this -->
             </div>
 
             <!-- Navigation Buttons -->
             <button
               id="prev-review"
-              class="absolute left-6 top-1/2 -translate-y-1/2 bg-forest text-cream w-10 h-10 rounded-2xl flex items-center justify-center hover:bg-forest-light transition-colors"
+              class="absolute left-6 top-1/2 -translate-y-1/2 bg-white shadow-lg text-forest w-12 h-12 rounded-2xl flex items-center justify-center text-3xl hover:bg-forest hover:text-cream transition-all active:scale-90"
             >
               ←
             </button>
             <button
               id="next-review"
-              class="absolute right-6 top-1/2 -translate-y-1/2 bg-forest text-cream w-10 h-10 rounded-2xl flex items-center justify-center hover:bg-forest-light transition-colors"
+              class="absolute right-6 top-1/2 -translate-y-1/2 bg-white shadow-lg text-forest w-12 h-12 rounded-2xl flex items-center justify-center text-3xl hover:bg-forest hover:text-cream transition-all active:scale-90"
             >
               →
             </button>
 
-            <!-- DELETE BUTTON (Admin only - toggleable) -->
-            <button
-              id="delete-reviews-btn"
-              class="absolute top-6 right-6 bg-red-500 hover:bg-red-600 text-white text-xs px-4 py-2 rounded-xl font-medium transition-colors hidden"
+            <!-- Admin Delete Buttons -->
+            <div
+              id="admin-buttons"
+              class="hidden absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4"
             >
-              🗑 Delete All Reviews
-            </button>
+              <button
+                onclick="deleteSingleReview()"
+                class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-sm font-medium transition-colors"
+              >
+                Delete This Review
+              </button>
+              <button
+                onclick="deleteAllReviews()"
+                class="px-6 py-3 bg-red-700 hover:bg-red-800 text-white rounded-2xl text-sm font-medium transition-colors"
+              >
+                Delete All Reviews
+              </button>
+            </div>
           </div>
 
-          <!-- Average Rating Summary -->
-          <div class="flex justify-center mt-8 gap-8 text-center">
+          <!-- Average Rating -->
+          <div class="flex justify-center mt-10 gap-12 text-center">
             <div>
-              <div id="average-stars" class="text-4xl text-sunny mb-1">
+              <div id="average-stars" class="text-5xl text-sunny mb-1">
                 ★★★★★
               </div>
-              <div id="average-number" class="text-3xl font-bold text-forest">
+              <div id="average-number" class="text-5xl font-bold text-forest">
                 0.0
               </div>
             </div>
-            <div class="border-l border-forest/20 pl-8">
+            <div class="border-l border-forest/20 pl-12">
               <div class="text-forest/60 text-sm">Total Reviews</div>
-              <div id="total-reviews" class="text-4xl font-bold text-forest">
+              <div id="total-reviews" class="text-5xl font-bold text-forest">
                 0
               </div>
             </div>
           </div>
         </div>
       </section>
-
       <!-- ──────── FOOTER ──────── -->
       <footer class="bg-forest-light py-8">
         <!-- Bottom copyright and project info footer -->
@@ -1464,12 +1479,14 @@
             <h3 class="font-space font-bold text-xl text-forest mb-6">
               Rate Our Service
             </h3>
+
             <form id="rate-form" onsubmit="submitRateForm(event)">
               <div class="mb-6 text-center">
                 <div
                   class="star-rating flex justify-center gap-2"
                   id="star-rating"
                 >
+                  <!-- Stars (same as before) -->
                   <button type="button" class="star p-1" onclick="setRating(1)">
                     <svg
                       class="w-10 h-10 text-cream-dark hover:text-sunny transition-colors"
@@ -1531,17 +1548,45 @@
                   Click to rate
                 </p>
               </div>
+
+              <!-- Name Input -->
+              <div class="mb-4">
+                <label class="block text-forest font-medium mb-2"
+                  >Your Name (Optional)</label
+                >
+                <input
+                  type="text"
+                  id="reviewer-name"
+                  class="custom-input"
+                  placeholder="Enter your name (Optional)"
+                />
+              </div>
+
+              <!-- Anonymous Checkbox -->
+              <div class="flex items-center gap-2 mb-6">
+                <input
+                  type="checkbox"
+                  id="anonymous-check"
+                  class="w-5 h-5 accent-forest"
+                />
+                <label for="anonymous-check" class="text-forest cursor-pointer"
+                  >Post as Anonymous</label
+                >
+              </div>
+
               <textarea
                 id="rate-comment"
                 rows="4"
                 class="custom-input mb-4 resize-none"
                 placeholder="Share your thoughts and suggestions..."
               ></textarea>
+
               <div class="text-center mt-4">
                 <p id="rating-display" class="text-forest font-medium text-lg">
                   Average Rating: Loading...
                 </p>
               </div>
+
               <button
                 type="submit"
                 class="btn-hover w-full py-3 bg-forest text-sunny rounded-xl font-semibold"
@@ -1552,7 +1597,6 @@
           </div>
         </div>
       </div>
-
       <div
         id="toast"
         class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300"
