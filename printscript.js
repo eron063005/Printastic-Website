@@ -319,74 +319,30 @@ function submitMessageForm(event) {
 }
 
 // ==============================================================
-// RATE FORM SUBMISSION (with Anonymous + Name support)
+// REVIEWS CAROUSEL + ADMIN DELETE SYSTEM
 // ==============================================================
-function submitRateForm(event) {
-  event.preventDefault();
+let currentReviewIndex = 0;
+let isAdminMode = false;
 
-  if (currentRating === 0) {
-    showToast("Please select a rating first!");
-    return;
+function toggleAdminMode() {
+  isAdminMode = !isAdminMode;
+  const logo = document.querySelector(".pulse-glow");
+  if (logo) {
+    logo.style.boxShadow = isAdminMode ? "0 0 0 5px #e8ea00" : "none";
   }
-
-  const isAnonymous = document.getElementById("anonymous-check").checked;
-  const reviewerName = document.getElementById("reviewer-name").value.trim();
-
-  const comment =
-    document.getElementById("rate-comment").value.trim() || "No comment";
-
-  // Save review
-  const reviews = JSON.parse(localStorage.getItem("printasticReviews")) || [];
-
-  const newReview = {
-    name: isAnonymous ? "Anonymous" : reviewerName || "Anonymous",
-    date: new Date().toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }),
-    comment: comment,
-    rating: currentRating,
-  };
-
-  reviews.unshift(newReview);
-  localStorage.setItem("printasticReviews", JSON.stringify(reviews));
-
-  // Update average
-  totalRating += currentRating;
-  ratingCount += 1;
-  localStorage.setItem("totalRating", totalRating);
-  localStorage.setItem("ratingCount", ratingCount);
-
-  const average = (totalRating / ratingCount).toFixed(1);
-  const displayElement = document.getElementById("rating-display");
-  if (displayElement)
-    displayElement.innerHTML = `Average Rating: ${average} ⭐ (${ratingCount} votes)`;
-
-  sendGeneralContact("Feedback", {
-    rating: currentRating,
-    comment: comment,
-    name: newReview.name,
-  });
-
-  closeRateModal();
-  document.getElementById("rate-form").reset();
-  setRating(0);
-  showToast(`Thank you! Current average: ${average} stars`);
-
+  document
+    .getElementById("admin-buttons")
+    .classList.toggle("hidden", !isAdminMode);
   renderReviews();
 }
 
-// ==============================================================
-// REVIEWS DISPLAY + DELETE BUTTON (Admin only)
-// ==============================================================
 function renderReviews() {
   const reviews = JSON.parse(localStorage.getItem("printasticReviews")) || [];
   const container = document.getElementById("review-content");
   const totalEl = document.getElementById("total-reviews");
 
   if (reviews.length === 0) {
-    container.innerHTML = `<p class="text-forest/60 italic">No reviews yet. Be the first to rate us!</p>`;
+    container.innerHTML = `<p class="text-forest/60 italic text-xl">No reviews yet.<br>You can be the first one to rate us!</p>`;
     totalEl.textContent = "0";
     return;
   }
@@ -395,74 +351,63 @@ function renderReviews() {
 
   container.innerHTML = `
     <div class="max-w-2xl mx-auto">
-      <div class="flex justify-center gap-1 text-3xl text-sunny mb-4">
+      <div class="flex justify-center gap-1 text-5xl text-sunny mb-8">
         ${Array(5)
           .fill(0)
           .map((_, i) => (i < review.rating ? "★" : "☆"))
           .join("")}
       </div>
-      <p class="text-forest text-lg leading-relaxed italic mb-6">"${review.comment}"</p>
-      <p class="font-medium text-forest">${review.name}</p>
-      <p class="text-forest/60 text-sm">${review.date}</p>
+      <p class="text-forest text-2xl leading-relaxed italic mb-10">"${review.comment}"</p>
+      <div class="flex items-center justify-center gap-4">
+        <div class="font-medium text-forest text-xl">${review.name}</div>
+        <div class="text-forest/50 text-sm">${review.date}</div>
+      </div>
     </div>
   `;
 
   totalEl.textContent = reviews.length;
 }
 
-// Delete all reviews (Admin only)
+// Delete single
+function deleteSingleReview() {
+  if (!confirm("Delete this review permanently?")) return;
+  let reviews = JSON.parse(localStorage.getItem("printasticReviews")) || [];
+  reviews.splice(currentReviewIndex, 1);
+  localStorage.setItem("printasticReviews", JSON.stringify(reviews));
+  currentReviewIndex = Math.max(
+    0,
+    Math.min(currentReviewIndex, reviews.length - 1),
+  );
+  renderReviews();
+}
+
+// Delete all
 function deleteAllReviews() {
-  if (confirm("Delete ALL reviews? This cannot be undone.")) {
-    localStorage.removeItem("printasticReviews");
-    localStorage.removeItem("totalRating");
-    localStorage.removeItem("ratingCount");
-    totalRating = 0;
-    ratingCount = 0;
-    currentReviewIndex = 0;
-    renderReviews();
-    showToast("All reviews have been deleted.");
-  }
+  if (!confirm("Delete ALL reviews? This cannot be undone!")) return;
+  localStorage.removeItem("printasticReviews");
+  localStorage.removeItem("totalRating");
+  localStorage.removeItem("ratingCount");
+  currentReviewIndex = 0;
+  renderReviews();
+  showToast("All reviews have been deleted.");
 }
 
-// Toggle delete button visibility
-let isDeleteVisible = false;
-function toggleDeleteButton() {
-  isDeleteVisible = !isDeleteVisible;
-  const btn = document.getElementById("delete-reviews-btn");
-  if (btn) btn.classList.toggle("hidden", !isDeleteVisible);
-}
-
-// Navigation
+// Navigation buttons
 document.addEventListener("DOMContentLoaded", () => {
-  const prevBtn = document.getElementById("prev-review");
-  const nextBtn = document.getElementById("next-review");
-  const deleteBtn = document.getElementById("delete-reviews-btn");
+  document.getElementById("prev-review").addEventListener("click", () => {
+    const reviews = JSON.parse(localStorage.getItem("printasticReviews")) || [];
+    if (reviews.length === 0) return;
+    currentReviewIndex =
+      (currentReviewIndex - 1 + reviews.length) % reviews.length;
+    renderReviews();
+  });
 
-  if (prevBtn)
-    prevBtn.addEventListener("click", () => {
-      const reviews =
-        JSON.parse(localStorage.getItem("printasticReviews")) || [];
-      if (reviews.length === 0) return;
-      currentReviewIndex =
-        (currentReviewIndex - 1 + reviews.length) % reviews.length;
-      renderReviews();
-    });
-
-  if (nextBtn)
-    nextBtn.addEventListener("click", () => {
-      const reviews =
-        JSON.parse(localStorage.getItem("printasticReviews")) || [];
-      if (reviews.length === 0) return;
-      currentReviewIndex = (currentReviewIndex + 1) % reviews.length;
-      renderReviews();
-    });
-
-  if (deleteBtn) deleteBtn.addEventListener("click", deleteAllReviews);
-
-  // Show delete button when clicking Printastic logo in nav
-  const logo = document.getElementById("nav-title");
-  if (logo) logo.style.cursor = "pointer";
-  if (logo) logo.addEventListener("click", toggleDeleteButton);
+  document.getElementById("next-review").addEventListener("click", () => {
+    const reviews = JSON.parse(localStorage.getItem("printasticReviews")) || [];
+    if (reviews.length === 0) return;
+    currentReviewIndex = (currentReviewIndex + 1) % reviews.length;
+    renderReviews();
+  });
 
   renderReviews();
 });
