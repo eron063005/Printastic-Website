@@ -1,6 +1,5 @@
 <!doctype html>
 <!-- Declares HTML5 document -->
-<!-- Pls gumana ka -->
 
 <html lang="en" class="h-full">
   <!-- Root HTML element with language set to English and full height -->
@@ -858,9 +857,12 @@
                   id="student-number"
                   required
                   pattern="^\d{2}-\d{5}$"
-                  title="Format: 00-00000"
+                  maxlength="8"
+                  inputmode="numeric"
+                  title="Format: 23-00627"
                   class="custom-input"
-                  placeholder="e.g., 22-12345"
+                  placeholder="Example 23-00627"
+                  oninput="this.value = this.value.replace(/[^0-9-]/g, '')"
                 />
               </div>
             </div>
@@ -919,8 +921,11 @@
                   required
                   pattern="^09\d{9}$"
                   title="Format: 09XXXXXXXXX"
+                  maxlength="11"
+                  inputmode="numeric"
                   class="custom-input"
-                  placeholder="09XX XXX XXXX"
+                  placeholder="09345678910"
+                  oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                 />
               </div>
             </div>
@@ -1615,4 +1620,3 @@
     <script src="printscript.js"></script>
   </body>
 </html>
-
